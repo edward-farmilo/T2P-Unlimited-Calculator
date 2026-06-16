@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>T2P Unlimited Texts Savings Calculator</title>
+<style>
+  :root {
+    --navy: #211e5e;
+    --navy-2: #2b2878;
+    --teal: #12adc6;
+    --teal-soft: #bfe9f0;
+    --green: #16a34a;
+    --green-soft: rgba(22,163,74,.10);
+    --amber: #d97706;
+    --amber-soft: rgba(217,119,6,.10);
+    --bg: #ffffff;
+    --surface: #eef1f5;
+    --surface-2: #e6ebf1;
+    --border: #dde3ea;
+    --ink: #25294a;
+    --ink-soft: #69708a;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(20,30,70,.10), 0 14px 34px rgba(20,30,70,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161a33;
+      --surface: #1d2240;
+      --surface-2: #252b4d;
+      --border: #333a63;
+      --ink: #eef1fb;
+      --ink-soft: #a7afce;
+      --teal-soft: rgba(18,173,198,.18);
+      --green-soft: rgba(22,163,74,.18);
+      --amber-soft: rgba(217,119,6,.18);
+      --shadow: 0 1px 3px rgba(0,0,0,.45), 0 14px 34px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    color: var(--ink);
+    background: transparent;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin-inline: auto; padding: 20px; }
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .head {
+    position: relative;
+    padding: 26px 28px 24px;
+    color: #fff;
+    background:
+      radial-gradient(1100px 360px at 85% -40%, rgba(18,173,198,.28), transparent 60%),
+      radial-gradient(700px 300px at 5% 130%, rgba(43,40,120,.9), transparent 60%),
+      linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+  }
+  .wm-logo { height: 40px; width: auto; max-width: 70%; display: block; margin-bottom: 20px; }
+  .title-row { display: flex; align-items: center; gap: 14px; }
+  .sm-badge {
+    width: 56px; height: 56px; border-radius: 14px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.22); flex: none;
+  }
+  .sm-icon { width: 44px; height: 44px; display: block; }
+  .head h1 { margin: 0; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
+  .head p  { margin: 8px 0 0; color: rgba(255,255,255,.82); font-size: .92rem; max-width: 56ch; }
+  .price-chip {
+    position: absolute; top: 22px; inset-inline-end: 24px;
+    background: #fff; font-weight: 800; font-size: .9rem;
+    padding: 7px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    font-variant-numeric: tabular-nums; text-align: center;
+  }
+  .price-chip small { display: block; font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 2px; }
+  .price-chip .chip-val { color: var(--navy); }
+  .price-chip.is-saving .chip-val { color: var(--green); }
+  .price-chip.is-breakeven .chip-val { color: var(--amber); }
+
+  /* ── Rate card ── */
+  .ratecard { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 16px 26px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  @media (max-width: 680px) { .ratecard { grid-template-columns: 1fr; } }
+  .rc-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .rc-name { font-size: .74rem; font-weight: 700; color: var(--ink); }
+  .rc-rate { font-size: .82rem; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; margin-top: 3px; }
+  @media (prefers-color-scheme: dark) { .rc-rate { color: var(--teal); } }
+  .rc-sub  { font-size: .68rem; color: var(--ink-soft); margin-top: 1px; }
+
+  /* ── Presets ── */
+  .presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 26px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .presets .pl { font-size: .72rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; margin-right: 4px; }
+  .preset-btn { font: inherit; font-size: .82rem; font-weight: 700; color: var(--ink); background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  .preset-btn:hover { border-color: var(--teal); }
+  .preset-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+  /* ── Main grid ── */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } .price-chip { display: none; } }
+  .inputs  { padding: 24px 26px; }
+  .results { padding: 24px 26px; background: var(--surface); border-inline-start: 1px solid var(--border); }
+  @media (max-width: 680px) { .results { border-inline-start: none; border-top: 1px solid var(--border); } }
+
+  /* ── Inputs ── */
+  label { display: block; font-size: .82rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field { margin-bottom: 18px; }
+  .fac-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .fac-head .rate { font-size: .76rem; font-weight: 700; color: var(--teal); }
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  input[type="range"] {
+    flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
+    background: var(--surface-2); border-radius: 999px; outline: none; margin: 6px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--teal); border: 3px solid var(--bg);
+    box-shadow: 0 1px 4px rgba(20,30,70,.35); cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--teal);
+    border: 3px solid var(--bg); box-shadow: 0 1px 4px rgba(20,30,70,.35); cursor: pointer;
+  }
+  input[type="range"]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--teal-soft); }
+  .num-mini {
+    width: 92px; padding: 9px 10px; font-size: 1rem; font-weight: 700; text-align: center;
+    color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; outline: none; font-variant-numeric: tabular-nums;
+  }
+  .num-mini:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+  .unit-note { font-size: .72rem; color: var(--ink-soft); margin-top: 2px; }
+
+  .season-hint {
+    margin-top: 10px; padding: 10px 12px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .season-hint-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 4px; }
+  .season-hint p { font-size: .75rem; color: var(--ink-soft); margin: 0; }
+
+  /* ── Results ── */
+  .section-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); font-weight: 800; margin: 0 0 8px; }
+  .line { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: .92rem; }
+  .line .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .muted { color: var(--ink-soft); }
+  .rule { height: 1px; background: var(--border); margin: 12px 0; border: 0; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .total .k { font-weight: 700; }
+  .total .v { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .total.ppt .v { color: var(--navy); }
+  @media (prefers-color-scheme: dark) { .total.ppt .v { color: var(--ink); } }
+  .total.unl .v { color: var(--teal); }
+
+  /* Saving / amber box */
+  .outcome-box {
+    margin-top: 16px; padding: 14px 16px;
+    border-radius: 10px; border: 1.5px solid var(--green);
+    background: var(--green-soft);
+  }
+  .outcome-box.amber { border-color: var(--amber); background: var(--amber-soft); }
+  .outcome-box.neutral { border-color: var(--border); background: var(--surface-2); }
+  .outcome-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--green); margin-bottom: 3px; }
+  .outcome-box.amber .outcome-label { color: var(--amber); }
+  .outcome-box.neutral .outcome-label { color: var(--ink-soft); }
+  .outcome-amount { font-size: 2rem; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--green); }
+  .outcome-box.amber .outcome-amount { font-size: 1.1rem; font-weight: 700; color: var(--amber); }
+  .outcome-box.neutral .outcome-amount { font-size: 1.1rem; font-weight: 700; color: var(--ink-soft); }
+  .outcome-note { font-size: .76rem; color: var(--ink-soft); margin-top: 5px; }
+
+  /* ── Seasonal bar chart ── */
+  .season-section {
+    padding: 20px 26px 22px;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+  }
+  .season-section-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); font-weight: 800; margin: 0 0 4px; }
+  .season-subtitle { font-size: .72rem; color: var(--ink-soft); margin: 0 0 14px; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 76px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
+  .bar-seg {
+    width: 100%; border-radius: 4px 4px 0 0;
+    min-height: 3px;
+    transition: height .25s ease, background .25s ease;
+  }
+  .bar-seg.high { background: var(--navy); }
+  .bar-seg.med  { background: var(--teal); }
+  .bar-seg.low  { background: var(--teal-soft); }
+  @media (prefers-color-scheme: dark) { .bar-seg.low { background: rgba(18,173,198,.25); } }
+  .bar-mo { font-size: .62rem; font-weight: 700; color: var(--ink-soft); text-align: center; }
+  .bar-mo.peak { color: var(--teal); }
+
+  /* ── Footer ── */
+  .foot { padding: 14px 26px; border-top: 1px solid var(--border); color: var(--ink-soft); font-size: .74rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <!-- ── Header ── -->
+    <div class="head">
+      <img class="wm-logo" alt="VenturEd Solutions" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABhsAAAGQCAYAAAC3YdG5AABzZ0lExxx">
+      <div class="price-chip" id="heroChip">
+        <small id="heroLabel">Annual saving</small>
+        <span class="chip-val" id="heroVal">—</span>
+      </div>
+      <div class="title-row">
+        <span class="sm-badge">
+          <!-- T2P speech-bubble icon -->
+          <svg class="sm-icon" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+            <rect width="44" height="44" rx="11" fill="#211e5e"/>
+            <!-- Speech bubble -->
+            <path d="M7 10 C7 7.5 9 5.5 11.5 5.5 L32.5 5.5 C35 5.5 37 7.5 37 10 L37 25 C37 27.5 35 29.5 32.5 29.5 L22 29.5 L15 36.5 L15 29.5 L11.5 29.5 C9 29.5 7 27.5 7 25 Z" fill="white" opacity="1"/>
+            <!-- Text lines inside bubble -->
+            <rect x="12.5" y="13" width="19" height="2.2" rx="1.1" fill="#12adc6"/>
+            <rect x="12.5" y="18.5" width="14" height="2.2" rx="1.1" fill="#12adc6"/>
+            <rect x="12.5" y="24" width="9" height="2.2" rx="1.1" fill="#12adc6"/>
+          </svg>
+        </span>
+        <h1>T2P Unlimited Savings Calculator</h1>
+      </div>
+      <p>See how much your school could save by switching to an unlimited T2P messaging plan instead of paying per text. Seasonal variation is factored in automatically.</p>
+    </div>
+
+    <!-- ── Rate card ── -->
+    <div class="ratecard">
+      <div class="rc-item">
+        <div class="rc-name">Current rate — pay per text</div>
+        <div class="rc-rate">6.5p / message</div>
+        <div class="rc-sub">charged per individual text sent</div>
+      </div>
+      <div class="rc-item">
+        <div class="rc-name">Unlimited plan (monthly)</div>
+        <div class="rc-rate" id="rcUnlimited">—</div>
+        <div class="rc-sub">fixed monthly cost, send as many texts as needed</div>
+      </div>
+    </div>
+
+    <!-- ── Presets ── -->
+    <div class="presets" id="presets"><span class="pl">Quick start</span></div>
+
+    <!-- ── Main grid ── -->
+    <div class="grid">
+
+      <!-- Inputs -->
+      <div class="inputs">
+        <p class="section-title">Your messaging volume</p>
+
+        <div class="field">
+          <div class="fac-head">
+            <label for="texts" style="margin:0">Texts in a typical busy month</label>
+            <span class="rate">6.5p each</span>
+          </div>
+          <div class="slider-row">
+            <input id="texts" type="range" min="0" max="5000" step="10" value="1000">
+            <input id="textsNum" class="num-mini" type="number" min="0" step="1" value="1000" inputmode="numeric">
+          </div>
+          <div class="unit-note">e.g. a normal October or February — not a peak or holiday month</div>
+        </div>
+
+        <div class="field">
+          <div class="fac-head">
+            <label for="unlimited" style="margin:0">Unlimited plan monthly cost</label>
+            <span class="rate">£ / month</span>
+          </div>
+          <div class="slider-row">
+            <input id="unlimited" type="range" min="0" max="300" step="1" value="49">
+            <input id="unlimitedNum" class="num-mini" type="number" min="0" step="1" value="49" inputmode="numeric">
+          </div>
+          <div class="unit-note">your T2P unlimited plan subscription price</div>
+        </div>
+
+        <div class="season-hint">
+          <div class="season-hint-title">Seasonal adjustment applied</div>
+          <p>September &amp; January are boosted as term-start months. July, August and December are reduced as schools are open less. The bar chart below shows the full picture.</p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results">
+        <p class="section-title">Annual cost comparison</p>
+
+        <div class="total ppt">
+          <span class="k">Pay per text (annual)</span>
+          <span class="v" id="pptAnnual">£0</span>
+        </div>
+        <div class="line muted">
+          <span id="pptBreakdown">0 texts/year × 6.5p</span>
+          <span class="v" id="pptTxns"></span>
+        </div>
+
+        <hr class="rule">
+
+        <div class="total unl">
+          <span class="k">Unlimited plan (annual)</span>
+          <span class="v" id="unlAnnual">£0</span>
+        </div>
+        <div class="line muted">
+          <span id="unlBreakdown">monthly × 12</span>
+          <span class="v" id="unlMonthly"></span>
+        </div>
+
+        <!-- Outcome box -->
+        <div class="outcome-box neutral" id="outcomeBox">
+          <div class="outcome-label" id="outcomeLabel">Annual saving</div>
+          <div class="outcome-amount" id="outcomeAmount">—</div>
+          <div class="outcome-note" id="outcomeNote">Adjust the sliders to see your saving.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Seasonal bar chart ── -->
+    <div class="season-section">
+      <div class="season-section-title">Estimated texts per month</div>
+      <div class="season-subtitle">Based on your typical month volume, adjusted for school term patterns</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   CONFIG — update these values to match actual T2P pricing
+   ========================================================================= */
+var CONFIG = {
+  locale:   'en-GB',
+  currency: 'GBP',
+
+  textCostPence: 6.5,   // pence per text
+
+  /* Seasonal multipliers relative to a normal term-time month.
+     Sep/Jan boosted (term starts), Jul/Aug/Dec reduced (holidays). */
+  months: [
+    { name: 'Jan', mult: 1.4, level: 'high' },
+    { name: 'Feb', mult: 1.0, level: 'med'  },
+    { name: 'Mar', mult: 1.0, level: 'med'  },
+    { name: 'Apr', mult: 0.8, level: 'med'  },  // Easter
+    { name: 'May', mult: 1.0, level: 'med'  },
+    { name: 'Jun', mult: 1.0, level: 'med'  },
+    { name: 'Jul', mult: 0.4, level: 'low'  },  // Summer
+    { name: 'Aug', mult: 0.1, level: 'low'  },  // Closed
+    { name: 'Sep', mult: 1.5, level: 'high' },  // New year
+    { name: 'Oct', mult: 1.0, level: 'med'  },
+    { name: 'Nov', mult: 1.0, level: 'med'  },
+    { name: 'Dec', mult: 0.5, level: 'low'  }   // Christmas
+  ],
+
+  sliders: {
+    texts:     { max: 5000, def: 1000 },
+    unlimited: { max: 300,  def: 49   }
+  },
+
+  defaultPreset: 'secondary',
+  presets: [
+    { id: 'primary',   label: 'Small primary',     texts: 300  },
+    { id: 'secondary', label: 'Large secondary',   texts: 1000 },
+    { id: 'mat',       label: 'Multi-academy',     texts: 3000 },
+    { id: 'blank',     label: 'Start blank',       texts: 0    }
+  ]
+};
+/* ===================== END OF CONFIG ===================================== */
+
+(function () {
+  var fmt  = new Intl.NumberFormat(CONFIG.locale, { style: 'currency', currency: CONFIG.currency, maximumFractionDigits: 0 });
+  var fmt2 = new Intl.NumberFormat(CONFIG.locale, { style: 'currency', currency: CONFIG.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var num0 = new Intl.NumberFormat(CONFIG.locale, { maximumFractionDigits: 0 });
+
+  var textCost   = CONFIG.textCostPence / 100;
+  var annualMult = CONFIG.months.reduce(function (s, m) { return s + m.mult; }, 0); // = 10.7
+  var maxMult    = Math.max.apply(null, CONFIG.months.map(function (m) { return m.mult; })); // = 1.5
+
+  /* ── Helpers ── */
+  function val(id) { return Math.max(0, Number(document.getElementById(id + 'Num').value) || 0); }
+
+  function setField(id, v) {
+    var slider = document.getElementById(id);
+    var box    = document.getElementById(id + 'Num');
+    slider.value = Math.min(Math.max(0, v || 0), Number(slider.max));
+    box.value    = v || 0;
+  }
+
+  function setActivePreset(pid) {
+    Array.prototype.forEach.call(document.querySelectorAll('.preset-btn'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-preset') === pid);
+    });
+  }
+  function clearPreset() { setActivePreset(null); }
+
+  function applyPreset(pid) {
+    var p = null;
+    CONFIG.presets.forEach(function (x) { if (x.id === pid) p = x; });
+    if (!p) return false;
+    setField('texts', p.texts);
+    // Unlimited plan cost is intentionally preserved so the user sets it once
+    setActivePreset(pid);
+    recalc();
+    return true;
+  }
+
+  function renderPresets() {
+    var host = document.getElementById('presets');
+    CONFIG.presets.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'preset-btn';
+      b.setAttribute('data-preset', p.id);
+      b.textContent = p.label;
+      b.addEventListener('click', function () { applyPreset(p.id); });
+      host.appendChild(b);
+    });
+  }
+
+  /* ── Bar chart (built once, heights updated in recalc) ── */
+  function renderBarChart() {
+    var host = document.getElementById('barChart');
+    CONFIG.months.forEach(function (m) {
+      var col = document.createElement('div');
+      col.className = 'bar-col';
+      var bar = document.createElement('div');
+      bar.className = 'bar-seg ' + m.level;
+      bar.id = 'bar-' + m.name;
+      var lbl = document.createElement('div');
+      lbl.className = 'bar-mo' + (m.level === 'high' ? ' peak' : '');
+      lbl.textContent = m.name;
+      col.appendChild(bar);
+      col.appendChild(lbl);
+      host.appendChild(col);
+    });
+  }
+
+  /* ── Main calculation ── */
+  function recalc() {
+    var busyTexts  = Math.floor(val('texts'));
+    var unlMonthly = val('unlimited');
+
+    var annualTexts = Math.round(busyTexts * annualMult);
+    var pptAnnual   = annualTexts * textCost;
+    var unlAnnual   = unlMonthly * 12;
+    var saving      = pptAnnual - unlAnnual;
+
+    /* Break-even: texts/busy-month at which unlimited pays off */
+    var breakEven = (unlMonthly > 0 && annualMult > 0)
+      ? Math.ceil(unlAnnual / (textCost * annualMult))
+      : 0;
+
+    /* Results panel */
+    document.getElementById('pptAnnual').textContent    = fmt.format(pptAnnual);
+    document.getElementById('pptBreakdown').textContent = num0.format(annualTexts) + ' texts / year × 6.5p';
+    document.getElementById('unlAnnual').textContent    = fmt.format(unlAnnual);
+    document.getElementById('unlBreakdown').textContent = fmt2.format(unlMonthly) + '/mo × 12';
+    document.getElementById('rcUnlimited').textContent  = fmt2.format(unlMonthly) + ' / month';
+
+    /* Outcome box */
+    var box    = document.getElementById('outcomeBox');
+    var label  = document.getElementById('outcomeLabel');
+    var amount = document.getElementById('outcomeAmount');
+    var note   = document.getElementById('outcomeNote');
+    var chip   = document.getElementById('heroChip');
+    var heroL  = document.getElementById('heroLabel');
+    var heroV  = document.getElementById('heroVal');
+
+    box.classList.remove('amber', 'neutral');
+    chip.classList.remove('is-saving', 'is-breakeven');
+
+    if (busyTexts === 0 || unlMonthly === 0) {
+      box.classList.add('neutral');
+      label.textContent  = 'Annual saving';
+      amount.textContent = '—';
+      note.textContent   = 'Adjust the sliders to see your saving.';
+      heroL.textContent  = 'Annual saving';
+      heroV.textContent  = '—';
+
+    } else if (saving > 0) {
+      /* Unlimited saves money */
+      label.textContent  = 'Annual saving with unlimited';
+      amount.textContent = fmt.format(saving);
+      note.textContent   = 'That\'s ' + fmt2.format(saving / 12) + ' saved on average every month.';
+      chip.classList.add('is-saving');
+      heroL.textContent  = 'Annual saving';
+      heroV.textContent  = fmt.format(saving);
+
+    } else {
+      /* Pay-per-text is cheaper */
+      box.classList.add('amber');
+      label.textContent  = 'Pay per text is currently cheaper';
+      amount.textContent = 'Unlimited costs ' + fmt.format(-saving) + ' more / year';
+      note.textContent   = 'Unlimited becomes worthwhile once you send over ' +
+                           num0.format(breakEven) + ' texts in a typical busy month.';
+      chip.classList.add('is-breakeven');
+      heroL.textContent  = 'Break-even';
+      heroV.textContent  = num0.format(breakEven) + ' texts/mo';
+    }
+
+    /* Bar chart heights */
+    var CHART_H = 60; // px for the tallest bar (maxMult = 1.5)
+    CONFIG.months.forEach(function (m) {
+      var bar = document.getElementById('bar-' + m.name);
+      if (!bar) return;
+      var h = Math.max(3, Math.round((m.mult / maxMult) * CHART_H));
+      bar.style.height = h + 'px';
+      /* Update color to reflect whether current month is above/below break-even */
+      var mTexts = Math.round(busyTexts * m.mult);
+      bar.title = m.name + ': ~' + num0.format(mTexts) + ' texts';
+    });
+  }
+
+  /* ── Wire sliders ↔ number boxes ── */
+  ['texts', 'unlimited'].forEach(function (id) {
+    var slider = document.getElementById(id);
+    var box    = document.getElementById(id + 'Num');
+    slider.addEventListener('input', function () { box.value = slider.value; clearPreset(); recalc(); });
+    box.addEventListener('input', function () {
+      var v = Math.max(0, Number(box.value) || 0);
+      slider.value = Math.min(v, Number(slider.max));
+      clearPreset();
+      recalc();
+    });
+  });
+
+  /* ── Footer ── */
+  document.getElementById('foot').textContent =
+    'Text cost: 6.5p per message (excl. VAT). ' +
+    'Seasonal multipliers: Sep ×1.5, Jan ×1.4 (high-volume term starts); ' +
+    'Apr ×0.8 (Easter); Jul ×0.4, Dec ×0.5 (school winding down); Aug ×0.1 (mostly closed); ' +
+    'all other months at the entered typical volume. ' +
+    'Annual = sum of all 12 seasonal estimates. Indicative only.';
+
+  /* ── Init ── */
+  renderBarChart();
+  renderPresets();
+  if (!applyPreset(CONFIG.defaultPreset)) recalc();
+})();
+</script>
+</body>
+</html>
